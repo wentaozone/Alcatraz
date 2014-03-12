@@ -24,7 +24,7 @@
 #import "Alcatraz.h"
 #import "ATZPluginWindowController.h"
 #import "ATZAlcatrazPackage.h"
-#import "ATZShell.h"
+#import "ATZGit.h"
 
 static Alcatraz *sharedPlugin;
 
@@ -68,11 +68,14 @@ static Alcatraz *sharedPlugin;
 }
 
 - (void)checkForCMDLineToolsAndOpenWindow {
-    
-    if ([ATZShell areCommandLineToolsAvailable])
-        [self loadWindowAndPutInFront];
-    else
-        [self presentAlertForInstallingCMDLineTools];
+    if ([self hasNSURLSessionAvailable]) {
+        if ([ATZGit areCommandLineToolsAvailable])
+            [self loadWindowAndPutInFront];
+        else
+            [self presentAlertWithMessageKey:@"CMDLineToolsWarning"];
+    } else {
+        [self presentAlertWithMessageKey:@"MavericksOnlyWarning"];
+    }
 }
 
 - (void)loadWindowAndPutInFront {
@@ -83,8 +86,12 @@ static Alcatraz *sharedPlugin;
     [self.windowController reloadPackages];
 }
 
-- (void)presentAlertForInstallingCMDLineTools {
-    NSAlert *alert = [NSAlert alertWithMessageText:[self.bundle localizedStringForKey:@"CMDLineToolsWarning" value:nil table:nil]
+- (BOOL)hasNSURLSessionAvailable {
+    return NSClassFromString(@"NSURLSession") != nil;
+}
+
+- (void)presentAlertWithMessageKey:(NSString *)messageKey {
+    NSAlert *alert = [NSAlert alertWithMessageText:[self.bundle localizedStringForKey:messageKey value:nil table:nil]
                                      defaultButton:nil
                                    alternateButton:nil
                                        otherButton:nil
